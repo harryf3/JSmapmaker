@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wizard Wars</title>
+</head>
+<body>
+
+<div id="namebox" class='namebox'>
+    <input id="inputtext" type="text" placeholder="Map Name">
+</div>
+    
+</body>
+<script src="pixi.min.js"></script>
+<script type="module" src="main.js"></script>
+</html>
+
+<style>
+    .namebox {
+        visibility: hidden;
+        display: fixed;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%,-50%);
+        z-index: 1;
+    }
+    canvas {
+        position:absolute;
+        left: 0px;
+        right: 0px;
+        z-index: 0;
+    }
+    body {
+        padding: 0%;
+        margin: 0%;
+        border: 0%;
+        width: 100vw;
+        height: 100vh;
+    }
+    html {
+        overflow: hidden;
+    }
+</style>
