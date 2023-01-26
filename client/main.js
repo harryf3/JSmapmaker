@@ -1,6 +1,7 @@
-import {Viewport} from './Viewport.mjs';
+//import {Viewport} from './Viewport.mjs';
 import { assetList } from './assetList.mjs';
 import { mapInProgress } from '../MapMaker.mjs';
+import { textureSplit } from './TextureSplit.mjs';
 
 const app = new PIXI.Application({
   width: 400,
@@ -74,12 +75,20 @@ function load() {
 function postLoad(assetsLoaded) {
   loadScreen.Container.visible = false;
   console.log(assetsLoaded);
-  mainMap = new mapInProgress(1000,1000,assetsLoaded);
+  mainMap = new mapInProgress(200,200,assetsLoaded,app.renderer);
   mainMap.mapMakingViewport.update();
   app.stage.addChild(mainMap.mapMakingContainer);
+  
+  let tstest = textureSplit(assetsLoaded.strut.strut3,32,32,app.renderer)
+  let i = 0;
+  for(let key in tstest) {
+    let ps = new PIXI.Sprite(tstest[key]);
+    ps.x = Math.floor(i/3)*32 +32 ;
+    ps.y = (i%3)*32 + 32;
+    //app.stage.addChild(ps);
+    i+=1;
+  }
 }
-
-
 
 let keymap = {};
 document.addEventListener('keyup',(e)=>{

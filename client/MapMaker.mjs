@@ -1,5 +1,6 @@
 import { Viewport } from "./Viewport.mjs";
 import { MiniMap } from './MiniMap.mjs';
+import { textureSplit } from "./TextureSplit.mjs";
 
 
 function tileSelector(text,buttonTexture) {
@@ -117,16 +118,12 @@ function exportImportMap(assetsLoaded,exportMap,importMap) {
   })
 }
 
-
-
 function tileRoadDecorator(texture) {
   this.sprite = new PIXI.Sprite(texture);
   this.name='road'
   this.xOffset = 0;
   this.yOffset = 0;
-
 }
-
 
 function eraseDecorators(texture) {
   this.eraserButton = new PIXI.Sprite(texture);
@@ -141,6 +138,159 @@ function eraseDecorators(texture) {
     } else {
       this.eraserButton.tint = 0xffffff;
     }
+  })
+}
+
+function createMiniMap(assestsLoaded,updateMiniMapFunc) {
+  this.createMiniMapButton = new PIXI.Sprite(assestsLoaded.createminimapbutton.createminimapbutton);
+  this.createMiniMapButton.x = 128;
+  this.createMiniMapButton.interactive = true;
+  this.createMiniMapButton.buttonMode = true;
+  this.createMiniMapButton.on('pointerdown',()=>{
+    updateMiniMapFunc()
+  })
+}
+
+function addDecorator(assestsLoaded) {
+  this.decoratorAddButton = new PIXI.Sprite(assestsLoaded.buttondecoration.buttondecoration);
+  this.decoratorAddButton.x = 160;
+  this.decoratorAddButton.interactive = true;
+  this.decoratorAddButton.buttonMode = true;
+
+  this.decorationContainer = new PIXI.Container();
+  this.decorationContainer.x = 32;
+  this.decorationContainer.y = 32;
+  this.decorationContainer.visible = false;
+
+  this.decorating = false;
+  this.chosenDec = '';
+
+  let bg = new PIXI.Graphics().beginFill(0xffffff).drawRect(0,0, Object.keys(assestsLoaded.dec).length*64, 32+32).endFill();
+  this.decorationContainer.addChild(bg)
+
+  this.tilesIn = [];
+  let xOn = 0
+  for(let key in assestsLoaded.dec) {
+    if(key == 'buttondecoration') {
+      continue
+    }
+    let spr = new PIXI.Sprite(assestsLoaded.dec[key]);
+    spr.x = xOn;
+    spr.y = 16;
+    spr.interactive = true;
+    spr.buttonMode = true;
+    spr.on('pointerdown',()=>{
+      this.chosenDec = spr.tileName;
+      this.removeSelectors();
+      spr.tint = '0xf7df9c';
+    })
+    spr.tileName = key;
+    xOn += 64;
+    this.decorationContainer.addChild(spr);
+    this.tilesIn.push(spr);
+  }
+
+  this.removeSelectors = () => {
+    this.tilesIn.forEach((tile)=>{
+      tile.tint = 0xffffff;
+    })
+  }
+
+  this.decoratorAddButton.on('pointerdown',()=>{
+    this.decorationContainer.visible = !this.decorationContainer.visible;
+    if(!this.decorating) {
+      this.decoratorAddButton.tint = 0xf7df9c;
+    } else {
+      this.decoratorAddButton.tint = 0xffffff;
+    }
+    this.decorating = !this.decorating;
+  })
+}
+
+
+function addStructure(assestsLoaded,passedRenderer) {
+  this.structuring = false;
+  this.addStructureButton = new PIXI.Sprite(assestsLoaded.addstructurebutton.addstructurebutton);
+  this.chosenStruct = "";
+  this.addStructureButton.interactive = true;
+  this.addStructureButton.buttonMode = true;
+  this.addStructureButton.x = 224;
+
+  this.selectContainer = new PIXI.Container();
+  let bg = new PIXI.Graphics().beginFill(0xffffff).drawRect(0,0, Object.keys(assestsLoaded.strut).length*64, 32+32).endFill();
+  this.selectContainer.addChild(bg);
+  this.selectContainer.visible = false;
+  this.selectContainer.y=64;
+  this.selectContainer.x = 32;
+
+  this.selector = new PIXI.Graphics().beginFill(0xc5f9fa).drawRect(0,0,32,32).endFill();
+  this.selector.alpha = 0.5;
+
+  this.tilesIn = [];
+  
+  this.splitStructures = {};
+  for(let key in assestsLoaded.strut) {
+    this.splitStructures[key] = textureSplit(assestsLoaded.strut[key],32,32,passedRenderer);
+  }
+
+  this.removeSelectors = () => {
+    this.tilesIn.forEach((tile)=>{
+      tile.removeChildren();
+    })
+  }
+  let xOn = 0;
+  for(let key in assestsLoaded.strut) {
+    if(key == 'buttondecoration') {
+      continue
+    }
+    let spr = new PIXI.Text(key,{fontFamily : 'Arial', fontSize: 10, fill : 0xff1010, align : 'center'})
+    spr.x = xOn;
+    spr.y = 16;
+    spr.interactive = true;
+    spr.buttonMode = true;
+    spr.on('pointerdown',()=>{
+      this.chosenStruct = spr.tileName;
+      this.removeSelectors();
+      spr.addChild(this.selector);
+    })
+    spr.tileName = key;
+    xOn += 64;
+    this.selectContainer.addChild(spr);
+    this.tilesIn.push(spr);
+  }
+
+  this.addStructureButton.on('pointerdown',()=>{
+    this.selectContainer.visible = !this.selectContainer.visible;
+    if(!this.structuring) {
+      this.addStructureButton.tint = 0xf7df9c;
+    } else {
+      this.addStructureButton.tint = 0xffffff;
+    }
+    this.structuring = !this.structuring;
+  })
+}
+
+function decorationDecorator(assestsLoaded,key) {
+  this.sprite = new PIXI.Sprite(assestsLoaded.dec[key]);
+  this.name = key;
+}
+
+function structureDecorator(splitAsset,key,part,family) {
+  this.sprite = new PIXI.Sprite(splitAsset);
+  this.spriteKey = key;
+  this.part = part;
+  this.family = family;
+}
+
+function inspectTile(assestsLoaded) {
+  this.inspectTileButton = new PIXI.Sprite(assestsLoaded.inspecttilebutton.inspecttilebutton);
+  this.inspectTileButton.x = 192;
+  this.inspecting = false;
+  this.inspectTileButton.interactive = true;
+  this.inspectTileButton.buttonMode = true;
+  this.inspectTileButton.on('pointerdown',()=>{
+    this.inspecting = !this.inspecting;
+    this.inspectTileButton.tint = this.inspecting ? 0xf7df9c : 0xffffff;
   })
 }
 
@@ -160,17 +310,7 @@ function getText(onEnter) {
   })
 }
 
-function downloadObjectAsJson(exportObj, exportName){
-  let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
-  let downloadAnchorNode = document.createElement('a');
-  downloadAnchorNode.setAttribute("href",     dataStr);
-  downloadAnchorNode.setAttribute("download", exportName + ".json");
-  document.body.appendChild(downloadAnchorNode); // required for firefox
-  downloadAnchorNode.click();
-  downloadAnchorNode.remove();
-}
-
-export function mapInProgress(w,h,assetsLoaded) {
+export function mapInProgress(w,h,assetsLoaded,passedRenderer) {
   this.mapName = 'Unnamed_map'
   getText((value)=>{this.mapName = value});
 
@@ -185,6 +325,9 @@ export function mapInProgress(w,h,assetsLoaded) {
   this.brushSize = new brushSize(assetsLoaded.bs)
   this.addRoad = new addRoad(assetsLoaded.roadbutton.roadbutton);
   this.eraseDecorators = new eraseDecorators(assetsLoaded.eraserbutton.eraserbutton);
+  this.addDecorator = new addDecorator(assetsLoaded);
+  this.inspectTile = new inspectTile(assetsLoaded);
+  this.addStructure = new addStructure(assetsLoaded,passedRenderer);
 
   //Function to pack all sprites within a tile into a pure text object
   //Which can be exported and then recreated with importMap;
@@ -228,12 +371,43 @@ export function mapInProgress(w,h,assetsLoaded) {
     console.log(choice);
     if(choice == true){
       downloadObjectAsJson(exportMapArr,this.mapName);
+    } else {
+      window.localStorage[this.mapName] = JSON.stringify(exportMapArr);
     }
   }
 
   //From export map return creates map
   this.importMap = () => {
-
+    this.addDecorator.decorating = false;
+    this.addStructure.structuring = false;
+    console.log("Map names avaliable")
+    for(let key in window.localStorage) {
+      console.log(key);
+    }
+    let chosenMap = prompt("Map name");
+    let loadingMap = JSON.parse(window.localStorage[chosenMap]);
+    console.log(this.map[0][0],loadingMap[0][0])
+    for(let w=0;w<loadingMap.length;w++) {
+      for(let h=0;h<loadingMap[0].length;h++) {
+        //Test solution for not finding decorators removes them
+        let lmd = loadingMap[w][h].decorators;
+        this.map[w][h].id = loadingMap[w][h].id;
+        this.map[w][h].decorators = {};
+        for(let key in lmd) {
+          if(key == 'road') {
+            let trd = new tileRoadDecorator(assetsLoaded.roadTile[lmd['road'].text]);
+            this.map[w][h].decorators['road'] = trd;
+          } else if(key == 'struct') {
+            console.log()
+          } else {
+            this.map[w][h].decorators[key] = new decorationDecorator(assetsLoaded,key);
+          }
+        }
+      }
+    }
+    this.mapMakingViewport.update();
+    this.mapName = chosenMap;
+    console.log('done');
   }
 
 
@@ -247,8 +421,7 @@ export function mapInProgress(w,h,assetsLoaded) {
           row.push({
             id:'bt1',
             num:num,
-            hasRoad:false,
-            decorators:{}
+            hasRoad:false
           });
           num+=1;
       }
@@ -260,22 +433,32 @@ export function mapInProgress(w,h,assetsLoaded) {
 
   //Mini map
   //Has to be after map is defined
-  // this.MiniMap = new MiniMap(this.map,assetsLoaded,200,100);
-  // this.MiniMap.MiniMapContainer.x = window.innerWidth-this.MiniMap.MiniMapContainer.width;
-  // this.MiniMap.MiniMapContainer.y = window.innerHeight-this.MiniMap.MiniMapContainer.height;
+  this.MiniMap = new MiniMap(this.map,assetsLoaded,200,100);
+  this.MiniMap.generatePixelTextures(passedRenderer).generateMap();
+  this.MiniMap.updateMap();
+  this.MiniMap.MiniMapContainer.x = window.innerWidth-this.MiniMap.MiniMapContainer.width;
+  this.MiniMap.MiniMapContainer.y = window.innerHeight-this.MiniMap.MiniMapContainer.height;
 
+  //Make mini map button
+  this.miniMapButton = new createMiniMap(assetsLoaded,this.MiniMap.updateMap);
 
   //Add buttons to map making container
   this.mapMakingContainer.addChild(this.mapMakingViewport.viewportContainer);
-  //this.mapMakingContainer.addChild(this.MiniMap.MiniMapContainer);
+  this.mapMakingContainer.addChild(this.MiniMap.MiniMapContainer);
   this.mapMakingContainer.addChild(this.tileSelector.tileSelectorButton);
   this.mapMakingContainer.addChild(this.brushSize.brushSizeButton);
   this.mapMakingContainer.addChild(this.addRoad.roadButton);
   this.mapMakingContainer.addChild(this.eraseDecorators.eraserButton);
   this.mapMakingContainer.addChild(this.exportImportMap.exportImportMapButton);
+  this.mapMakingContainer.addChild(this.miniMapButton.createMiniMapButton);
   this.mapMakingContainer.addChild(this.exportImportMap.choiceContainer);
+  this.mapMakingContainer.addChild(this.addDecorator.decoratorAddButton);
+  this.mapMakingContainer.addChild(this.inspectTile.inspectTileButton);
+  this.mapMakingContainer.addChild(this.addStructure.addStructureButton)
   this.mapMakingContainer.addChild(this.tileSelector.tileSelectorContainer);
-
+  this.mapMakingContainer.addChild(this.addDecorator.decorationContainer);
+  this.mapMakingContainer.addChild(this.addStructure.selectContainer);
+  
 
   //Wrap cords function
   this.mapCordOverflowHandler = (x,y) => {
@@ -358,7 +541,7 @@ export function mapInProgress(w,h,assetsLoaded) {
   }
 
   this.change = (n,x,y) => {
-    if(!this.addRoad.roading && !this.eraseDecorators.erasing) {
+    if(!this.addRoad.roading && !this.eraseDecorators.erasing && !this.addDecorator.decorating && !this.inspectTile.inspecting && !this.addStructure.structuring) {
       for(let ix=x;ix<x+this.brushSize.brushSize;ix++) {
         for(let iy=y;iy<y+this.brushSize.brushSize;iy++) {
           let {rx,ry} = this.mapCordOverflowHandler(ix,iy);
@@ -367,6 +550,9 @@ export function mapInProgress(w,h,assetsLoaded) {
       }
     } else if(this.addRoad.roading) {
       if(!this.map[x][y].hasRoad) {
+        if(!this.map[x][y].decorators) {
+          this.map[x][y].decorators = {};
+        }
         let roadType = this.roadTypeFinder(this.map,x,y);
         let trd = new tileRoadDecorator(assetsLoaded.roadTile[`roadTile${roadType}`]);
         trd.type = roadType;
@@ -377,8 +563,54 @@ export function mapInProgress(w,h,assetsLoaded) {
         this.updateNearbyRoad(this.map,x,y);
       }
     } else if(this.eraseDecorators.erasing) {
-      this.map[x][y].decorators = {};
-      this.map[x][y].hasRoad = false;
+      for(let ix=x;ix<x+this.brushSize.brushSize;ix++) {
+        for(let iy=y;iy<y+this.brushSize.brushSize;iy++) {
+          let {rx,ry} = this.mapCordOverflowHandler(ix,iy);
+          this.map[rx][ry].decorators = {};
+          this.map[rx][ry].hasRoad = false;
+          this.updateNearbyRoad(this.map,rx,ry);
+        }
+      }
+      
+    } else if(this.addDecorator.decorating) {
+      let chosenDecKey = this.addDecorator.chosenDec;
+      for(let ix=x;ix<x+this.brushSize.brushSize;ix++) {
+        for(let iy=y;iy<y+this.brushSize.brushSize;iy++) {
+          let {rx,ry} = this.mapCordOverflowHandler(ix,iy);
+          if(!this.map[rx][ry].decorators) {
+            this.map[rx][ry].decorators = {};
+          }
+          this.map[rx][ry].decorators[chosenDecKey] = new decorationDecorator(assetsLoaded,chosenDecKey);
+        }
+      }
+    } else if(this.inspectTile.inspecting) {
+      console.log(this.map[x][y])
+    } else if(this.addStructure.structuring && this.addStructure.chosenStruct != "") {
+
+      let structKey = this.addStructure.chosenStruct;
+      let partOn = 0;
+      let structSize = Math.sqrt(Object.keys(this.addStructure.splitStructures[structKey]).length);
+
+      let created = [];
+
+      for(let ix=x;ix<x+structSize;ix++) {
+        for(let iy=y;iy<y+structSize;iy++) {
+          let {rx,ry} = this.mapCordOverflowHandler(ix,iy);
+          if(!this.map[rx][ry].decorators) {
+            this.map[rx][ry].decorators = {};
+          } 
+          let create = new structureDecorator(this.addStructure.splitStructures[structKey][partOn],structKey,partOn,[]);
+          console.log(create);
+          this.map[rx][ry].decorators['struct'] = create;
+          created.push(create);
+          console.log(create);
+          partOn += 1;
+        }
+      }
+
+      for(let i=0;i<created.length;i++) {
+        created[i].family = created;
+      }
     }
     this.mapMakingViewport.update();
     // if(this.brushSize.brushSize == 1) {

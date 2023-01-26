@@ -1,0 +1,9 @@
+issue
+decorators can overlay differently indexes need to be alphabetized or sorted in some way as without viewport will draw them how they were drawn.
+
+issue/todo
+I don't really like how the mapmaker is turning out it's pretty convuloted and overall I think can be done better
+
+
+todo
+I'd like the structure system in the viewport to be different than decorators to allow for larger structures
