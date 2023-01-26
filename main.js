@@ -1,6 +1,6 @@
 //import {Viewport} from './Viewport.mjs';
 import { assetList } from './assetList.mjs';
-import { mapInProgress } from '../MapMaker.mjs';
+import { mapInProgress } from './MapMaker.mjs';
 import { textureSplit } from './TextureSplit.mjs';
 
 const app = new PIXI.Application({
